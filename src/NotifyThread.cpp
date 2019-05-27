@@ -7,12 +7,20 @@
 
 #include <X11/Xlib.h>
 #include <X11/extensions/scrnsaver.h>
+#include <stdlib.h>
+#include <string>
 
 #include "NotifyThread.h"
 #include "Log.h"
+#include <gio/gio.h>
 
 NotifyThread::NotifyThread() :
-		Thread(), busy_time_s_(0) {
+		Thread(), busy_time_s_(0), config_(nullptr) {
+
+}
+
+NotifyThread::NotifyThread(Shared* config) :
+		Thread(), busy_time_s_(0), config_(config) {
 
 }
 
@@ -34,7 +42,11 @@ void NotifyThread::main() {
 
 	busy_time_s_ = 0;
 	while (1) {
-		sleep (threshold_away_s);
+		sleep(threshold_away_s);
+
+		if (!config_->notificationEnabled) {
+			continue;
+		}
 
 		XScreenSaverQueryInfo(dpy, DefaultRootWindow(dpy), info);
 		unsigned long away_time_s = info->idle / 1000;
@@ -51,13 +63,26 @@ void NotifyThread::main() {
 		}
 
 		if (busy_time_s_ > busy_duration_s) {
-			sendNotification("It's time for a break!");
+			sendNotification(TITLE, MESSAGE);
 			busy_time_s_ = 0;
 		}
 
 	}
 }
 
-void NotifyThread::sendNotification(const char* msg) {
+void NotifyThread::sendNotification(const char* title, const char* text) {
+	// see https://wiki.archlinux.org/index.php/Desktop_Notifications#C++
+	GApplication *application = g_application_new("hello.world",
+			G_APPLICATION_FLAGS_NONE);
+	g_application_register(application, NULL, NULL);
+	GNotification *notification = g_notification_new(title);
+	g_notification_set_body(notification, text);
+	GIcon *icon = g_themed_icon_new("dialog-information");
+	g_notification_set_icon(notification, icon);
+	g_application_send_notification(application, NULL, notification);
+	g_object_unref(icon);
+	g_object_unref(notification);
+	g_object_unref(application);
 
+	log(INFO, "notification sent!");
 }

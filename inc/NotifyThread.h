@@ -9,12 +9,15 @@
 #define INC_NOTIFYTHREAD_H_
 
 #include "Thread.h"
+#include "Shared.h"
 
 class NotifyThread : public Thread
 {
 
 public:
 	NotifyThread();
+
+	NotifyThread(Shared* config);
 
 	virtual ~NotifyThread();
 
@@ -24,7 +27,9 @@ protected:
 private:
 	unsigned long busy_time_s_;
 
-	void sendNotification(const char* msg);
+	Shared* config_;
+
+	void sendNotification(const char* title, const char* msg);
 
 };
 

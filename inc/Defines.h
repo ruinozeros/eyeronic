@@ -16,13 +16,15 @@ enum LogLevel {
 	INFO, ERROR
 };
 
+#define TITLE "Eyeronic"
+#define MESSAGE "It's time to rest your eyes"
 
 static const unsigned long second = 1;
 static const unsigned long minute = 60 * second;
 
 // settings
 static const unsigned long break_duration_s = 20 * minute; // duration of a break     = 20 minutes
-static const unsigned long busy_duration_s = 20 * minute;  // duration of a work unit = 20 minutes
-static const unsigned long threshold_away_s = minute;      // 1 minute idle does not add up busy time
+static const unsigned long busy_duration_s = 10;  // duration of a work unit = 20 minutes
+static const unsigned long threshold_away_s = 10;      // 1 minute idle does not add up busy time
 
 #endif /* INC_DEFINES_H_ */

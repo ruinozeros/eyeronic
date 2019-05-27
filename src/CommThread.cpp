@@ -13,10 +13,14 @@
 #include "Log.h"
 
 CommThread::CommThread() :
-		Thread() {
+		Thread(), config_(nullptr) {
 
 }
 
+CommThread::CommThread(Shared* config) :
+		Thread(), config_(config) {
+
+}
 CommThread::~CommThread() {
 
 }
@@ -106,13 +110,13 @@ bool CommThread::handleCommand(const char* cmd) {
 
 	/* Handle commands. */
 	if (!strncmp(cmd, "STOP", BUFFER_SIZE)) {
-		log(INFO, "Stop received!");
-
+		log(INFO, "Disable notification.");
+		config_->notificationEnabled = false;
 	}
 
 	if (!strncmp(cmd, "START", BUFFER_SIZE)) {
-		log(INFO, "Stop received!");
-
+		log(INFO, "Enable notification.");
+		config_->notificationEnabled = true;
 	}
 
 	return true;

@@ -46,8 +46,11 @@ int main() {
 	signal(SIGHUP, signalHandler); /* catch hangup signal */
 	signal(SIGTERM, signalHandler); /* catch kill signal */
 
-	CommThread communication_thread;
-	NotifyThread notification_thread;
+	Shared config;
+	config.notificationEnabled = true;
+
+	CommThread communication_thread(&config);
+	NotifyThread notification_thread(&config);
 
 	communication_thread.run();
 	notification_thread.run();
