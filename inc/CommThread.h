@@ -20,6 +20,9 @@ public:
 protected:
 	void main();
 
+private:
+	bool handleCommand(const char* cmd);
+
 };
 
 
