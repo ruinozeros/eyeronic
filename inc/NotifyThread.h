@@ -8,9 +8,18 @@
 #ifndef INC_NOTIFYTHREAD_H_
 #define INC_NOTIFYTHREAD_H_
 
-class NotifyThread
+#include "Thread.h"
+
+class NotifyThread : public Thread
 {
+
 public:
+	NotifyThread();
+
+	virtual ~NotifyThread();
+
+protected:
+	void main();
 
 };
 

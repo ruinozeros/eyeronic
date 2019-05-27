@@ -8,10 +8,17 @@
 #ifndef INC_COMMTHREAD_H_
 #define INC_COMMTHREAD_H_
 
-class CommThread
+#include "Thread.h"
+
+class CommThread : public Thread
 {
 public:
+	CommThread();
 
+	virtual ~CommThread();
+
+protected:
+	void main();
 
 };
 
