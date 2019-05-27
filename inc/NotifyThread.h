@@ -21,6 +21,11 @@ public:
 protected:
 	void main();
 
+private:
+	unsigned long busy_time_s_;
+
+	void sendNotification(const char* msg);
+
 };
 
 
