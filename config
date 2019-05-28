@@ -1,0 +1,20 @@
+# example config for eyeronic
+# time unit: seconds
+
+# title of notification
+title = Reminder
+
+# message of notification
+message = Time to take a little break and rest your eyes
+
+# icon path
+icon = ~/.config/eyeronic/coffee.png
+
+# break duration [s]
+break_duration = 1200
+
+# remind after x seconds
+remind_after = 1200
+
+# freeze timer if inactiv for x seconds
+freeze_after = 60

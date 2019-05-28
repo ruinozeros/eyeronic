@@ -11,9 +11,11 @@
 #include <string>
 #include <mutex>              // std::mutex, std::unique_lock
 #include <gio/gio.h>
+#include <UserConfig.h>
 
 #include "NotifyThread.h"
 #include "Log.h"
+#include "UserConfig.h"
 
 NotifyThread::NotifyThread() :
 		Thread(), busy_time_s_(0), config_(nullptr) {
@@ -50,7 +52,7 @@ void NotifyThread::main() {
 
 		// wait for threshold or being woken up
 		if (config_->condition.wait_for(lck,
-				std::chrono::seconds(threshold_away_s))
+				std::chrono::seconds(UserConfig::get().minBreakDuration()))
 				== std::cv_status::no_timeout)
 			continue;
 
@@ -62,19 +64,22 @@ void NotifyThread::main() {
 		XScreenSaverQueryInfo(dpy, DefaultRootWindow(dpy), info);
 		unsigned long away_time_s = info->idle / 1000;
 
-		if (away_time_s > break_duration_s) {
+		if (away_time_s > UserConfig::get().breakDuration()) {
 			// already taking a break
 			busy_time_s_ = 0;
 			continue;
 		}
 
-		if (away_time_s < threshold_away_s) {
+		if (away_time_s < UserConfig::get().minBreakDuration()) {
 			// increase busy time
-			busy_time_s_ += threshold_away_s;
+			busy_time_s_ += UserConfig::get().minBreakDuration();
 		}
 
-		if (busy_time_s_ > busy_duration_s) {
-			sendNotification(TITLE, MESSAGE, ICON);
+		if (busy_time_s_ > UserConfig::get().remindAfter()) {
+			// send notification
+			sendNotification(UserConfig::get().title(),
+							 UserConfig::get().message(),
+							 UserConfig::get().icon());
 			busy_time_s_ = 0;
 		}
 	}

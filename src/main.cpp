@@ -14,6 +14,9 @@
 #include <iostream>
 #include <getopt.h>
 
+#include <fstream>
+#include <sstream>
+
 #include <sys/socket.h>
 #include <sys/un.h>
 
@@ -21,6 +24,8 @@
 #include "Log.h"
 #include "CommThread.h"
 #include "NotifyThread.h"
+#include "UserConfig.h"
+#include "StringOp.h"
 
 void deamonize();
 
@@ -32,9 +37,15 @@ void startDeamon();
 
 void sendCommandToDeamon(const char* cmd);
 
+void setConfigPath(const char* path);
+
+void readConfigFile();
+
+bool fileExists(const std::string& p);
+
 int main(int argc, char* argv[]) {
 
-	if (argc != 2) {
+	if (argc < 2) {
 		printUsage(argv[0]);
 		exit(EXIT_FAILURE);
 	}
@@ -44,27 +55,26 @@ int main(int argc, char* argv[]) {
 	while (1) {
 		int option_index = 0;
 
-		static struct option long_options[] = {
-				{"start",   no_argument, 0,  0 },
-				{"stop",    no_argument, 0,  0 },
-				{"enable",  no_argument, 0,  0 },
-				{"disable", no_argument, 0,  0 },
-				{"toggle",  no_argument, 0,  0 },
-				{"status",  no_argument, 0,  0 },
-				{"help",    no_argument, 0, 'h'},
-				{0,         0,           0,  0 }
-				};
+		static struct option long_options[] ={
+				{ "start", no_argument, 0, 0 },
+				{ "stop", no_argument, 0, 0 },
+				{ "enable", no_argument, 0, 0 },
+				{ "disable",no_argument, 0, 0 },
+				{ "toggle", no_argument, 0,0 },
+				{ "status", no_argument, 0, 0 },
+				{ "config", required_argument, 0, 0 },
+				{ "help",no_argument, 0, 'h' },
+				{ 0, 0, 0, 0 } };
 
 		c = getopt_long(argc, argv, "h", long_options, &option_index);
 		if (c == -1)
 			break;
 
 		switch (c) {
-		case 0:	/* long_options... */
+		case 0: /* long_options... */
 			switch (option_index) {
 			case 0: /* --start */
 				startDeamon();
-				printf("Deamon started.");
 				break;
 
 			case 1: /* --stop */
@@ -85,6 +95,10 @@ int main(int argc, char* argv[]) {
 
 			case 5: /* --status */
 				sendCommandToDeamon(CMD_STATUS);
+				break;
+
+			case 6: /* --config=*/
+				setConfigPath(optarg);
 				break;
 			}
 			break;
@@ -112,7 +126,12 @@ int main(int argc, char* argv[]) {
 }
 
 void startDeamon() {
-	// deamonize this process
+	// Read user config file.
+	readConfigFile();
+
+	printf("Start deamon!");
+
+	// Deamonize this process.
 	deamonize();
 
 	/* Change the current working directory */
@@ -134,13 +153,12 @@ void startDeamon() {
 	signal(SIGHUP, signalHandler); /* catch hangup signal */
 	signal(SIGTERM, signalHandler); /* catch kill signal */
 
-	Shared config;
+	Shared shared_vars;
+	shared_vars.notificationEnabled = true;
+	shared_vars.killMe = false;
 
-	CommThread communication_thread(&config);
-	NotifyThread notification_thread(&config);
-
-	config.notificationEnabled = true;
-	config.killMe = false;
+	CommThread communication_thread(&shared_vars);
+	NotifyThread notification_thread(&shared_vars);
 
 	communication_thread.run();
 	notification_thread.run();
@@ -151,11 +169,6 @@ void startDeamon() {
 	log(INFO, "Deamon terminates.");
 	closelog();
 	exit(EXIT_SUCCESS);
-}
-
-void stop_deamon() {
-	int i = std::system("killall eyeronic");
-	printf("i = %d\n", i);
 }
 
 void deamonize() {
@@ -212,9 +225,95 @@ void printUsage(char* argv0) {
 	printf("  --disable          Disable notification\n");
 	printf("  --toggle           Toggle notification status\n");
 	printf("  --status           Get notification status\n");
+	printf("  --config           Set path to config file.\n"
+		   "                     Default ~/.config/eyeronic/config\n");
 	printf("  --help, -h         Show this help message\n\n");
 
 	printf("28.05.2019 https://github.com/ruinozeros");
+}
+
+void setConfigPath(const char* path) {
+	std::string p(path);
+
+	if (p.length() == 0) {
+		perror("No path specified");
+		exit(EXIT_FAILURE);
+	}
+
+	if (!fileExists(p)) {
+		perror("File not found!");
+		exit(EXIT_FAILURE);
+	}
+
+	UserConfig::get().path(p);
+}
+
+std::string relToAbs(std::string rel_path) {
+	std::string user_dir = std::string(getenv("HOME"));
+	std::string abs_path = sops::replace(std::string(rel_path), "$HOME",
+			user_dir);
+
+	user_dir.append(sops::separator());
+	abs_path = sops::replace(abs_path, "~/", user_dir);
+	return abs_path;
+}
+
+void readConfigFile() {
+
+	std::string abs_path = relToAbs(UserConfig::get().path());
+	if(!fileExists(abs_path))
+	{
+		perror((std::string("Config file ") + abs_path +
+				"not found! Using default values.").c_str());
+		return;
+	}
+
+	printf("Read config file '%s'.\n", abs_path.c_str());
+
+	std::ifstream fin(relToAbs(UserConfig::get().path()));
+	std::string line;
+	while (getline(fin, line)) {
+
+		if (line.find("=") == std::string::npos)
+			continue;
+
+		std::string stmp = sops::lstrip(line.substr(line.find("=") + 1));
+		unsigned long ltmp;
+		if (line.find("title") != std::string::npos) {
+			UserConfig::get().title(stmp);
+			printf("Set title to '%s'.\n", stmp.c_str());
+		} else if (line.find("icon") != std::string::npos) {
+			stmp = relToAbs(stmp);
+			if (fileExists(stmp)) {
+				UserConfig::get().icon(stmp);
+				printf("Set icon path to '%s'.\n", stmp.c_str());
+			} else {
+				perror("Icon path not found!");
+				exit(EXIT_FAILURE);
+			}
+		} else if (line.find("message") != std::string::npos) {
+			UserConfig::get().message(stmp);
+			printf("Set message to '%s'.\n", stmp.c_str());
+
+		} else if (line.find("break_duration") != std::string::npos) {
+			std::istringstream iss(stmp);
+			iss >> ltmp;
+			UserConfig::get().breakDuration(ltmp);
+			printf("Set break duration to %ld.\n", ltmp);
+
+		} else if (line.find("remind_after") != std::string::npos) {
+			std::istringstream iss(stmp);
+			iss >> ltmp;
+			UserConfig::get().remindAfter(ltmp);
+			printf("Set remind_after to %ld.\n", ltmp);
+
+		} else if (line.find("freeze_after") != std::string::npos) {
+			std::istringstream iss(stmp);
+			iss >> ltmp;
+			UserConfig::get().minBreakDuration(ltmp);
+			printf("Set min break duration to %ld.\n", ltmp);
+		}
+	}
 }
 
 void sendCommandToDeamon(const char* cmd) {
@@ -236,10 +335,9 @@ void sendCommandToDeamon(const char* cmd) {
 	 * implementations have additional (nonstandard) fields in
 	 * the structure.
 	 */
-
 	memset(&addr, 0, sizeof(struct sockaddr_un));
-	/* Connect socket to socket address */
 
+	/* Connect socket to socket address */
 	addr.sun_family = AF_UNIX;
 	strncpy(addr.sun_path, SOCKET_NAME, sizeof(addr.sun_path) - 1);
 
@@ -255,7 +353,6 @@ void sendCommandToDeamon(const char* cmd) {
 	if (ret == -1) {
 		perror("write");
 	}
-
 
 	/* Receive result. */
 	ret = read(data_socket, buffer, BUFFER_SIZE);
@@ -273,5 +370,8 @@ void sendCommandToDeamon(const char* cmd) {
 	close(data_socket);
 }
 
-
+bool fileExists(const std::string& name) {
+	struct stat buffer;
+	return (stat(name.c_str(), &buffer) == 0);
+}
 

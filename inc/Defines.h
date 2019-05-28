@@ -10,15 +10,21 @@
 
 #define SOCKET_NAME "/tmp/9Lq7BNBnBycd6nxy.socket"
 
-#define BUFFER_SIZE 12
+#define BUFFER_SIZE 50
 
 enum LogLevel {
 	INFO, ERROR
 };
 
-#define TITLE       "Reminder"
-#define MESSAGE     "Take a break and rest your eyes."
-#define ICON        "~/.config/eyeronic/coffee.png"
+
+#define DEFAULT_PATH              "~/.config/eyeronic/config"
+#define DEFAULT_TITLE             "Reminder"
+#define DEFAULT_MESSAGE           "Take a break and rest your eyes."
+#define DEFAULT_ICON              "~/.config/eyeronic/coffee.png"
+#define DEFAULT_BREAK_DUR_S       (20 * 60)
+#define DEFAULT_REMIND_AFTER_S    (20 * 60)
+#define DEFAULT_MIN_BREAK_DUR_S   (60)
+
 
 static const unsigned long second = 1;
 static const unsigned long minute = 60 * second;
