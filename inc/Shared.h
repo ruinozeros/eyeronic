@@ -18,6 +18,8 @@ typedef struct {
 
 	std::condition_variable condition;
 
+	unsigned int remaining_percentage;
+
 } Shared;
 
 #endif /* INC_SHARED_H_ */

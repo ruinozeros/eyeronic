@@ -63,6 +63,7 @@ int main(int argc, char* argv[]) {
 				{ "toggle", no_argument, 0,0 },
 				{ "status", no_argument, 0, 0 },
 				{ "config", required_argument, 0, 0 },
+				{ "percent",no_argument, 0, 0},
 				{ "help",no_argument, 0, 'h' },
 				{ 0, 0, 0, 0 } };
 
@@ -100,6 +101,9 @@ int main(int argc, char* argv[]) {
 			case 6: /* --config=*/
 				setConfigPath(optarg);
 				break;
+
+			case 7: /* --percent*/
+				sendCommandToDeamon(CMD_PERCENT);
 			}
 			break;
 

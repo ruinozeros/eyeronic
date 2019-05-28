@@ -42,6 +42,7 @@ static const unsigned long threshold_away_s = minute;      // 1 minute idle does
 #define CMD_ENABLE  "enable"
 #define CMD_DISABLE "disable"
 #define CMD_TOGGLE	"toggle"
+#define CMD_PERCENT "percent"
 
 #define ANS_ON		"ON"
 #define ANS_OFF		"OFF"

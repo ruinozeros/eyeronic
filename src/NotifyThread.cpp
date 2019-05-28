@@ -50,6 +50,12 @@ void NotifyThread::main() {
 
 	while (!config_->killMe) {
 
+		//
+		config_->remaining_percentage =
+				(int) ((1.0
+				- (double) busy_time_s_
+						/ (double) UserConfig::get().remindAfter()) * 100.0);
+
 		// wait for threshold or being woken up
 		if (config_->condition.wait_for(lck,
 				std::chrono::seconds(UserConfig::get().minBreakDuration()))

@@ -154,6 +154,10 @@ bool CommThread::handleCommand(const char* cmd, char* answer) {
 		config_->killMe = true;
 		config_->condition.notify_all();
 	}
+	/* percent =============================================================  */
+	else if(!strncmp(cmd, CMD_PERCENT, BUFFER_SIZE)) {
+		sprintf(answer, std::to_string(config_->remaining_percentage).c_str());
+	}
 	/* ??????? =============================================================  */
 	else
 	{
