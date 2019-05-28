@@ -9,11 +9,14 @@
 #define INC_SHARED_H_
 
 #include <atomic>
+#include <condition_variable>
 
 typedef struct {
 
 	std::atomic_bool notificationEnabled;
 	std::atomic_bool killMe;
+
+	std::condition_variable condition;
 
 } Shared;
 

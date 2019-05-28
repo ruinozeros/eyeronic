@@ -121,9 +121,10 @@ bool CommThread::handleCommand(const char* cmd, char* answer) {
 	else if (!strncmp(cmd, CMD_ENABLE, BUFFER_SIZE)) {
 		log(INFO, "Enable notification.");
 		config_->notificationEnabled = true;
+		config_->condition.notify_all();
 		sprintf(answer, ANS_OK);
 	}
-	/* stoggle =============================================================  */
+	/* toggle =============================================================  */
 	else if (!strncmp(cmd, CMD_TOGGLE, BUFFER_SIZE)) {
 		bool enabled = config_->notificationEnabled;
 
@@ -151,6 +152,7 @@ bool CommThread::handleCommand(const char* cmd, char* answer) {
 	else if(!strncmp(cmd, CMD_STOP, BUFFER_SIZE)) {
 		log(INFO, "Stop deamon.");
 		config_->killMe = true;
+		config_->condition.notify_all();
 	}
 	/* ??????? =============================================================  */
 	else

@@ -9,10 +9,11 @@
 #include <X11/extensions/scrnsaver.h>
 #include <stdlib.h>
 #include <string>
+#include <mutex>              // std::mutex, std::unique_lock
+#include <gio/gio.h>
 
 #include "NotifyThread.h"
 #include "Log.h"
-#include <gio/gio.h>
 
 NotifyThread::NotifyThread() :
 		Thread(), busy_time_s_(0), config_(nullptr) {
@@ -41,11 +42,21 @@ void NotifyThread::main() {
 	XScreenSaverInfo *info = XScreenSaverAllocInfo();
 
 	busy_time_s_ = 0;
+
+	std::mutex mtx;
+	std::unique_lock<std::mutex> lck(mtx);
+
 	while (!config_->killMe) {
-		sleep(threshold_away_s);
+
+		// wait for threshold or being woken up
+		if (config_->condition.wait_for(lck,
+				std::chrono::seconds(threshold_away_s))
+				== std::cv_status::no_timeout)
+			continue;
+
 
 		if (!config_->notificationEnabled) {
-			continue;
+			config_->condition.wait(lck);
 		}
 
 		XScreenSaverQueryInfo(dpy, DefaultRootWindow(dpy), info);
@@ -70,7 +81,8 @@ void NotifyThread::main() {
 	log(INFO, "NotifyThread stopped.");
 }
 
-void NotifyThread::sendNotification(const char* title, const char* text, const char* path_icon) {
+void NotifyThread::sendNotification(const char* title, const char* text,
+		const char* path_icon) {
 	// see https://wiki.archlinux.org/index.php/Desktop_Notifications#C++
 	GApplication *application = g_application_new("hello.world",
 			G_APPLICATION_FLAGS_NONE);

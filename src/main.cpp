@@ -102,6 +102,12 @@ int main(int argc, char* argv[]) {
 			exit(EXIT_FAILURE);
 		}
 	}
+
+	if (optind < argc) {
+		printUsage(argv[0]);
+		exit(EXIT_FAILURE);
+	}
+
 	return 0;
 }
 
@@ -129,11 +135,12 @@ void startDeamon() {
 	signal(SIGTERM, signalHandler); /* catch kill signal */
 
 	Shared config;
-	config.notificationEnabled = true;
-	config.killMe = false;
 
 	CommThread communication_thread(&config);
 	NotifyThread notification_thread(&config);
+
+	config.notificationEnabled = true;
+	config.killMe = false;
 
 	communication_thread.run();
 	notification_thread.run();
