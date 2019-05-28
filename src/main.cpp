@@ -12,6 +12,7 @@
 #include <string.h>
 #include <signal.h>
 #include <iostream>
+#include <getopt.h>
 
 #include "Defines.h"
 #include "Log.h"
@@ -22,7 +23,82 @@ void deamonize();
 
 void signalHandler(int sig);
 
-int main() {
+void printUsage(char* argv0);
+
+void start();
+
+void stop();
+
+
+int main(int argc, char* argv[]) {
+
+	if (argc != 2) {
+		printUsage(argv[0]);
+		exit(EXIT_FAILURE);
+	}
+
+	int c;
+
+	while (1) {
+		int option_index = 0;
+
+		static struct option long_options[] = {
+				{"start",   no_argument, 0,  0 },
+				{"stop",    no_argument, 0,  0 },
+				{"enable",  no_argument, 0,  0 },
+				{"disable", no_argument, 0,  0 },
+				{"toggle",  no_argument, 0,  0 },
+				{"status",  no_argument, 0,  0 },
+				{0,         0,           0,  0 }
+				};
+
+		c = getopt_long(argc, argv, "h", long_options, &option_index);
+		if (c == -1)
+			break;
+
+		switch (c) {
+
+		case 0: /* start */
+			printf("option %s", long_options[option_index].name);
+			break;
+
+		case 1: /* stop */
+			printf("option %s", long_options[option_index].name);
+			break;
+
+		case 2: /* enable */
+			printf("option %s", long_options[option_index].name);
+			break;
+
+		case 3: /* disable */
+			printf("option %s", long_options[option_index].name);
+			break;
+
+		case 4: /* toggle */
+			printf("option %s", long_options[option_index].name);
+			break;
+
+		case 5: /* status */
+			printf("option %s", long_options[option_index].name);
+			break;
+
+		case 'h':
+			printUsage(argv[0]);
+			exit(EXIT_SUCCESS);
+
+		case '?':
+			printUsage(argv[0]);
+			exit(EXIT_FAILURE);
+
+		default:
+			printUsage(argv[0]);
+			exit(EXIT_FAILURE);
+		}
+	}
+	return 0;
+}
+
+void start() {
 
 	// deamonize this process
 	deamonize();
@@ -61,6 +137,11 @@ int main() {
 	log(INFO, "Program terminates.");
 	closelog();
 	exit(EXIT_SUCCESS);
+}
+
+void stop() {
+
+
 }
 
 void deamonize() {
@@ -104,4 +185,19 @@ void signalHandler(int sig) {
 		exit(0);
 		break;
 	}
+}
+
+void printUsage(char* argv0) {
+	printf("Usage: %s [COMMAND]\n", argv0);
+	printf("Start and control eyeronic deamon.\n\n");
+
+	printf("Commands:\n");
+	printf("  start            Start deamon\n");
+	printf("  stop             Stop deamon\n");
+	printf("  enable           Enable notification\n");
+	printf("  disable          Disable notification\n");
+	printf("  toggle           Toggle notification status\n");
+	printf("  status           Get notification status\n\n");
+
+	printf("28.05.2019 https://github.com/ruinozeros");
 }
