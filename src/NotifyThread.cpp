@@ -63,21 +63,21 @@ void NotifyThread::main() {
 		}
 
 		if (busy_time_s_ > busy_duration_s) {
-			sendNotification(TITLE, MESSAGE);
+			sendNotification(TITLE, MESSAGE, ICON);
 			busy_time_s_ = 0;
 		}
 
 	}
 }
 
-void NotifyThread::sendNotification(const char* title, const char* text) {
+void NotifyThread::sendNotification(const char* title, const char* text, const char* path_icon) {
 	// see https://wiki.archlinux.org/index.php/Desktop_Notifications#C++
 	GApplication *application = g_application_new("hello.world",
 			G_APPLICATION_FLAGS_NONE);
 	g_application_register(application, NULL, NULL);
 	GNotification *notification = g_notification_new(title);
 	g_notification_set_body(notification, text);
-	GIcon *icon = g_themed_icon_new("dialog-information");
+	GIcon *icon = g_themed_icon_new(path_icon);
 	g_notification_set_icon(notification, icon);
 	g_application_send_notification(application, NULL, notification);
 	g_object_unref(icon);
