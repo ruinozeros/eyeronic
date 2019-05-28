@@ -33,6 +33,7 @@ void CommThread::main() {
 	int connection_socket;
 	int data_socket;
 	char buffer[BUFFER_SIZE];
+	char answer[BUFFER_SIZE];
 
 	/*
 	 * In case the program exited inadvertently on the last run,
@@ -84,12 +85,12 @@ void CommThread::main() {
 			/* Ensure buffer is 0-terminated. */
 			buffer[BUFFER_SIZE - 1] = 0;
 
-			if (handleCommand(buffer))
+			if (handleCommand(buffer, answer))
 				break;
 		}
 
-		/* Send OK. */
-		sprintf(buffer, "OK");
+		/* Send answer. */
+		sprintf(buffer, answer);
 		ret = write(data_socket, buffer, BUFFER_SIZE);
 		if (ret == -1) {
 			log(ERROR, "write() failed");
@@ -106,17 +107,50 @@ void CommThread::main() {
 	unlink(SOCKET_NAME);
 }
 
-bool CommThread::handleCommand(const char* cmd) {
+bool CommThread::handleCommand(const char* cmd, char* answer) {
 
-	/* Handle commands. */
-	if (!strncmp(cmd, "STOP", BUFFER_SIZE)) {
+	/* STOP */
+	if (!strncmp(cmd, "stop", BUFFER_SIZE)) {
 		log(INFO, "Disable notification.");
 		config_->notificationEnabled = false;
+		sprintf(answer, "OK");
 	}
 
-	if (!strncmp(cmd, "START", BUFFER_SIZE)) {
+	/* START */
+	else if (!strncmp(cmd, "start", BUFFER_SIZE)) {
 		log(INFO, "Enable notification.");
 		config_->notificationEnabled = true;
+		sprintf(answer, "OK");
+	}
+
+	/* TOGGLE */
+	else if (!strncmp(cmd, "toggle", BUFFER_SIZE)) {
+		log(INFO, "Toggle notification.");
+		bool enabled = config_->notificationEnabled;
+
+		if(enabled)
+		{
+			config_->notificationEnabled = false;
+			sprintf(answer, "OFF");
+		}
+		else
+		{
+			config_->notificationEnabled = true;
+			sprintf(answer, "ON");
+		}
+	}
+
+	/* STATUS */
+	else if(!strncmp(cmd, "status", BUFFER_SIZE)) {
+		if(config_->notificationEnabled)
+			sprintf(answer, "ON");
+		else
+			sprintf(answer, "OFF");
+	}
+
+	else
+	{
+		sprintf(answer, "???");
 	}
 
 	return true;
