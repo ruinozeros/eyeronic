@@ -14,6 +14,9 @@
 #include <iostream>
 #include <getopt.h>
 
+#include <sys/socket.h>
+#include <sys/un.h>
+
 #include "Defines.h"
 #include "Log.h"
 #include "CommThread.h"
@@ -25,10 +28,9 @@ void signalHandler(int sig);
 
 void printUsage(char* argv0);
 
-void start();
+void start_deamon();
 
-void stop();
-
+void sendCommandToDeamon(const char* cmd);
 
 int main(int argc, char* argv[]) {
 
@@ -49,6 +51,7 @@ int main(int argc, char* argv[]) {
 				{"disable", no_argument, 0,  0 },
 				{"toggle",  no_argument, 0,  0 },
 				{"status",  no_argument, 0,  0 },
+				{"help",    no_argument, 0, 'h'},
 				{0,         0,           0,  0 }
 				};
 
@@ -57,29 +60,32 @@ int main(int argc, char* argv[]) {
 			break;
 
 		switch (c) {
+		case 0:	/* long_options... */
+			switch (option_index) {
+			case 0: /* --start */
+				start_deamon();
+				break;
 
-		case 0: /* start */
-			printf("option %s", long_options[option_index].name);
-			break;
+			case 1: /* --stop */
+				sendCommandToDeamon(CMD_STOP);
+				break;
 
-		case 1: /* stop */
-			printf("option %s", long_options[option_index].name);
-			break;
+			case 2: /* --enable */
+				sendCommandToDeamon(CMD_ENABLE);
+				break;
 
-		case 2: /* enable */
-			printf("option %s", long_options[option_index].name);
-			break;
+			case 3: /* --disable */
+				sendCommandToDeamon(CMD_DISABLE);
+				break;
 
-		case 3: /* disable */
-			printf("option %s", long_options[option_index].name);
-			break;
+			case 4: /* --toggle */
+				sendCommandToDeamon(CMD_TOGGLE);
+				break;
 
-		case 4: /* toggle */
-			printf("option %s", long_options[option_index].name);
-			break;
-
-		case 5: /* status */
-			printf("option %s", long_options[option_index].name);
+			case 5: /* --status */
+				sendCommandToDeamon(CMD_STATUS);
+				break;
+			}
 			break;
 
 		case 'h':
@@ -98,8 +104,7 @@ int main(int argc, char* argv[]) {
 	return 0;
 }
 
-void start() {
-
+void start_deamon() {
 	// deamonize this process
 	deamonize();
 
@@ -124,6 +129,7 @@ void start() {
 
 	Shared config;
 	config.notificationEnabled = true;
+	config.killMe = false;
 
 	CommThread communication_thread(&config);
 	NotifyThread notification_thread(&config);
@@ -134,14 +140,14 @@ void start() {
 	communication_thread.join();
 	notification_thread.join();
 
-	log(INFO, "Program terminates.");
+	log(INFO, "Deamon terminates.");
 	closelog();
 	exit(EXIT_SUCCESS);
 }
 
-void stop() {
-
-
+void stop_deamon() {
+	int i = std::system("killall eyeronic");
+	printf("i = %d\n", i);
 }
 
 void deamonize() {
@@ -192,12 +198,73 @@ void printUsage(char* argv0) {
 	printf("Start and control eyeronic deamon.\n\n");
 
 	printf("Commands:\n");
-	printf("  start            Start deamon\n");
-	printf("  stop             Stop deamon\n");
-	printf("  enable           Enable notification\n");
-	printf("  disable          Disable notification\n");
-	printf("  toggle           Toggle notification status\n");
-	printf("  status           Get notification status\n\n");
+	printf("  --start            Start deamon\n");
+	printf("  --stop             Stop deamon\n");
+	printf("  --enable           Enable notification\n");
+	printf("  --disable          Disable notification\n");
+	printf("  --toggle           Toggle notification status\n");
+	printf("  --status           Get notification status\n");
+	printf("  --help, -h         Show this help message\n\n");
 
 	printf("28.05.2019 https://github.com/ruinozeros");
 }
+
+void sendCommandToDeamon(const char* cmd) {
+	struct sockaddr_un addr;
+	int i;
+	int ret;
+	int data_socket;
+	char buffer[BUFFER_SIZE];
+
+	/* Create local socket. */
+	data_socket = socket(AF_UNIX, SOCK_SEQPACKET, 0);
+	if (data_socket == -1) {
+		perror("socket");
+		exit(EXIT_FAILURE);
+	}
+
+	/*
+	 * For portability clear the whole structure, since some
+	 * implementations have additional (nonstandard) fields in
+	 * the structure.
+	 */
+
+	memset(&addr, 0, sizeof(struct sockaddr_un));
+	/* Connect socket to socket address */
+
+	addr.sun_family = AF_UNIX;
+	strncpy(addr.sun_path, SOCKET_NAME, sizeof(addr.sun_path) - 1);
+
+	ret = connect(data_socket, (const struct sockaddr *) &addr,
+			sizeof(struct sockaddr_un));
+	if (ret == -1) {
+		fprintf(stderr, "The server is down.\n");
+		exit(EXIT_FAILURE);
+	}
+
+	/* Send argument */
+	ret = write(data_socket, cmd, strlen(cmd) + 1);
+	if (ret == -1) {
+		perror("write");
+		break;
+	}
+
+
+	/* Receive result. */
+	ret = read(data_socket, buffer, BUFFER_SIZE);
+	if (ret == -1) {
+		perror("read");
+		exit(EXIT_FAILURE);
+	}
+
+	/* Ensure buffer is 0-terminated. */
+	buffer[BUFFER_SIZE - 1] = 0;
+
+	printf("%s\n", buffer);
+
+	/* Close socket. */
+	close(data_socket);
+}
+
+
+

@@ -67,7 +67,7 @@ void CommThread::main() {
 	}
 
 	/* This is the main loop for handling connections. */
-	while (1) {
+	while (!config_->killMe) {
 		data_socket = accept(connection_socket, NULL, NULL);
 		if (data_socket == -1) {
 			log(ERROR, "accept() failed");
@@ -105,52 +105,57 @@ void CommThread::main() {
 
 	/* Unlink the socket. */
 	unlink(SOCKET_NAME);
+
+	log(INFO, "CommThread stopped.");
 }
 
 bool CommThread::handleCommand(const char* cmd, char* answer) {
 
-	/* STOP */
-	if (!strncmp(cmd, "stop", BUFFER_SIZE)) {
+	/* disable =============================================================  */
+	if (!strncmp(cmd, CMD_DISABLE, BUFFER_SIZE)) {
 		log(INFO, "Disable notification.");
 		config_->notificationEnabled = false;
-		sprintf(answer, "OK");
+		sprintf(answer, ANS_OK);
 	}
-
-	/* START */
-	else if (!strncmp(cmd, "start", BUFFER_SIZE)) {
+	/* enable ==============================================================  */
+	else if (!strncmp(cmd, CMD_ENABLE, BUFFER_SIZE)) {
 		log(INFO, "Enable notification.");
 		config_->notificationEnabled = true;
-		sprintf(answer, "OK");
+		sprintf(answer, ANS_OK);
 	}
-
-	/* TOGGLE */
-	else if (!strncmp(cmd, "toggle", BUFFER_SIZE)) {
-		log(INFO, "Toggle notification.");
+	/* stoggle =============================================================  */
+	else if (!strncmp(cmd, CMD_TOGGLE, BUFFER_SIZE)) {
 		bool enabled = config_->notificationEnabled;
 
 		if(enabled)
 		{
+			log(INFO, "Toggle notification to DISABLED.");
 			config_->notificationEnabled = false;
-			sprintf(answer, "OFF");
+			sprintf(answer, ANS_OFF);
 		}
 		else
 		{
+			log(INFO, "Toggle notification to ENABLED.");
 			config_->notificationEnabled = true;
-			sprintf(answer, "ON");
+			sprintf(answer, ANS_ON);
 		}
 	}
-
-	/* STATUS */
-	else if(!strncmp(cmd, "status", BUFFER_SIZE)) {
+	/* status ==============================================================  */
+	else if(!strncmp(cmd, CMD_STATUS, BUFFER_SIZE)) {
 		if(config_->notificationEnabled)
-			sprintf(answer, "ON");
+			sprintf(answer, ANS_ON);
 		else
-			sprintf(answer, "OFF");
+			sprintf(answer, ANS_OFF);
 	}
-
+	/* stop ================================================================  */
+	else if(!strncmp(cmd, CMD_STOP, BUFFER_SIZE)) {
+		log(INFO, "Stop deamon.");
+		config_->killMe = true;
+	}
+	/* ??????? =============================================================  */
 	else
 	{
-		sprintf(answer, "???");
+		sprintf(answer, ANS_ERR);
 	}
 
 	return true;

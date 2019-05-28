@@ -13,6 +13,7 @@
 typedef struct {
 
 	std::atomic_bool notificationEnabled;
+	std::atomic_bool killMe;
 
 } Shared;
 

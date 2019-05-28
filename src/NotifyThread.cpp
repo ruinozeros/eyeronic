@@ -41,7 +41,7 @@ void NotifyThread::main() {
 	XScreenSaverInfo *info = XScreenSaverAllocInfo();
 
 	busy_time_s_ = 0;
-	while (1) {
+	while (!config_->killMe) {
 		sleep(threshold_away_s);
 
 		if (!config_->notificationEnabled) {
@@ -66,8 +66,8 @@ void NotifyThread::main() {
 			sendNotification(TITLE, MESSAGE, ICON);
 			busy_time_s_ = 0;
 		}
-
 	}
+	log(INFO, "NotifyThread stopped.");
 }
 
 void NotifyThread::sendNotification(const char* title, const char* text, const char* path_icon) {
