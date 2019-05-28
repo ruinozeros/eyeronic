@@ -24,7 +24,7 @@ protected:
 	void main();
 
 private:
-	bool handleCommand(const char* cmd);
+	bool handleCommand(const char* cmd, char* answer);
 
 	Shared* config_;
 

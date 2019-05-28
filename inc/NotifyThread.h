@@ -29,7 +29,7 @@ private:
 
 	Shared* config_;
 
-	void sendNotification(const char* title, const char* msg);
+	void sendNotification(const char* title, const char* msg, const char* icon);
 
 };
 
