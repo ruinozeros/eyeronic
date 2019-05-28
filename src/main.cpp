@@ -28,7 +28,7 @@ void signalHandler(int sig);
 
 void printUsage(char* argv0);
 
-void start_deamon();
+void startDeamon();
 
 void sendCommandToDeamon(const char* cmd);
 
@@ -63,7 +63,8 @@ int main(int argc, char* argv[]) {
 		case 0:	/* long_options... */
 			switch (option_index) {
 			case 0: /* --start */
-				start_deamon();
+				startDeamon();
+				printf("Deamon started.");
 				break;
 
 			case 1: /* --stop */
@@ -104,7 +105,7 @@ int main(int argc, char* argv[]) {
 	return 0;
 }
 
-void start_deamon() {
+void startDeamon() {
 	// deamonize this process
 	deamonize();
 
@@ -211,7 +212,7 @@ void printUsage(char* argv0) {
 
 void sendCommandToDeamon(const char* cmd) {
 	struct sockaddr_un addr;
-	int i;
+
 	int ret;
 	int data_socket;
 	char buffer[BUFFER_SIZE];
@@ -246,7 +247,6 @@ void sendCommandToDeamon(const char* cmd) {
 	ret = write(data_socket, cmd, strlen(cmd) + 1);
 	if (ret == -1) {
 		perror("write");
-		break;
 	}
 
 
