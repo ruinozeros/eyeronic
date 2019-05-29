@@ -117,6 +117,7 @@ bool CommThread::handleCommand(const char* cmd, char* answer) {
 	if (!strncmp(cmd, CMD_DISABLE, BUFFER_SIZE)) {
 		log(INFO, "Disable notification.");
 		config_->notification_enabled = false;
+		config_->condition.notify_all();
 		sprintf(answer, ANS_OK);
 	}
 	/* enable ==============================================================  */
@@ -134,12 +135,14 @@ bool CommThread::handleCommand(const char* cmd, char* answer) {
 		{
 			log(INFO, "Toggle notification to DISABLED.");
 			config_->notification_enabled = false;
+			config_->condition.notify_all();
 			sprintf(answer, ANS_OFF);
 		}
 		else
 		{
 			log(INFO, "Toggle notification to ENABLED.");
 			config_->notification_enabled = true;
+			config_->condition.notify_all();
 			sprintf(answer, ANS_ON);
 		}
 	}

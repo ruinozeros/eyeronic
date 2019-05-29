@@ -35,6 +35,8 @@ public:
 
     unsigned long minBreakDuration() { return min_break_duration_s; }
 
+    unsigned long checkInterval() { return 10; }
+
 
     // setter
     void title(std::string t) { title_ = t; }

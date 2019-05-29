@@ -48,22 +48,26 @@ void NotifyThread::main() {
 
 	while (!config_->kill_me) {
 
-		// wait for some time
 		config_->remaining_percentage =
 				(int) ((1.0
 				- (double) busy_time_s_
 						/ (double) UserConfig::get().remindAfter()) * 100.0);
 
+		// notification disabled -> wait
+		if (!config_->notification_enabled) {
+
+			config_->condition.wait(lck);
+
+			// enabled
+			busy_time_s_ = 0;
+			config_->busy_min = 0;
+		}
+
 		// wait for threshold or being woken up
 		if (config_->condition.wait_for(lck,
-				std::chrono::seconds(UserConfig::get().minBreakDuration()))
+				std::chrono::seconds(UserConfig::get().checkInterval()))
 				== std::cv_status::no_timeout)
 			continue;
-
-		// notification disabled
-		if (!config_->notification_enabled) {
-			config_->condition.wait(lck);
-		}
 
 		XScreenSaverQueryInfo(dpy, DefaultRootWindow(dpy), info);
 		away_time_s_ = info->idle / 1000;
@@ -71,28 +75,32 @@ void NotifyThread::main() {
 		if (away_time_s_ > UserConfig::get().breakDuration()) {
 			// already taking a break
 			busy_time_s_ = 0;
+			config_->busy_min = 0;
 			continue;
 		}
 
 		if (away_time_s_ < UserConfig::get().minBreakDuration()) {
 			// busy
-			config_->notifier_state = (int) BUSY;
-			busy_time_s_ += UserConfig::get().minBreakDuration();
+			config_->notifier_state = BUSY;
+			busy_time_s_ += UserConfig::get().checkInterval();
 			config_->busy_min = busy_time_s_ / minute;
 		}
 		else
 		{
 			// pausing
-			config_->notifier_state = (int) PAUSE;
+			config_->notifier_state = PAUSE;
 			config_->break_min = away_time_s_ / minute;
 		}
 
-		if (busy_time_s_ > UserConfig::get().remindAfter()) {
+		if (busy_time_s_ > UserConfig::get().remindAfter() &&
+				config_->notification_enabled) {
 			// send notification
 			sendNotification(UserConfig::get().title(),
 							 UserConfig::get().message(),
 							 UserConfig::get().icon());
+
 			busy_time_s_ = 0;
+			config_->break_min = 0;
 		}
 	}
 	log(INFO, "NotifyThread stopped.");
