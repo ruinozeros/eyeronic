@@ -1,8 +1,6 @@
 /*
  * CommThread.cpp
  *
- *  Created on: May 27, 2019
- *      Author: ru1
  */
 
 #include <X11/Xlib.h>
@@ -18,12 +16,12 @@
 #include "UserConfig.h"
 
 NotifyThread::NotifyThread() :
-		Thread(), busy_time_s_(0), config_(nullptr) {
+		Thread(), busy_time_s_(0), away_time_s_(0), config_(nullptr) {
 
 }
 
 NotifyThread::NotifyThread(Shared* config) :
-		Thread(), busy_time_s_(0), config_(config) {
+		Thread(), busy_time_s_(0), away_time_s_(0), config_(config) {
 
 }
 
@@ -48,9 +46,9 @@ void NotifyThread::main() {
 	std::mutex mtx;
 	std::unique_lock<std::mutex> lck(mtx);
 
-	while (!config_->killMe) {
+	while (!config_->kill_me) {
 
-		//
+		// wait for some time
 		config_->remaining_percentage =
 				(int) ((1.0
 				- (double) busy_time_s_
@@ -62,23 +60,31 @@ void NotifyThread::main() {
 				== std::cv_status::no_timeout)
 			continue;
 
-
-		if (!config_->notificationEnabled) {
+		// notification disabled
+		if (!config_->notification_enabled) {
 			config_->condition.wait(lck);
 		}
 
 		XScreenSaverQueryInfo(dpy, DefaultRootWindow(dpy), info);
-		unsigned long away_time_s = info->idle / 1000;
+		away_time_s_ = info->idle / 1000;
 
-		if (away_time_s > UserConfig::get().breakDuration()) {
+		if (away_time_s_ > UserConfig::get().breakDuration()) {
 			// already taking a break
 			busy_time_s_ = 0;
 			continue;
 		}
 
-		if (away_time_s < UserConfig::get().minBreakDuration()) {
-			// increase busy time
+		if (away_time_s_ < UserConfig::get().minBreakDuration()) {
+			// busy
+			config_->notifier_state = (int) BUSY;
 			busy_time_s_ += UserConfig::get().minBreakDuration();
+			config_->busy_min = busy_time_s_ / minute;
+		}
+		else
+		{
+			// pausing
+			config_->notifier_state = (int) PAUSE;
+			config_->break_min = away_time_s_ / minute;
 		}
 
 		if (busy_time_s_ > UserConfig::get().remindAfter()) {

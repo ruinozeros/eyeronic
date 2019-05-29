@@ -1,16 +1,18 @@
 /*
  * CommThread.cpp
  *
- *  Created on: May 27, 2019
- *      Author: ru1
  */
 
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <mutex>
+#include <sstream>
+
+#include <iomanip>
 
 #include "CommThread.h"
 #include "Log.h"
+#include "UserConfig.h"
 
 CommThread::CommThread() :
 		Thread(), config_(nullptr) {
@@ -67,7 +69,7 @@ void CommThread::main() {
 	}
 
 	/* This is the main loop for handling connections. */
-	while (!config_->killMe) {
+	while (!config_->kill_me) {
 		data_socket = accept(connection_socket, NULL, NULL);
 		if (data_socket == -1) {
 			log(ERROR, "accept() failed");
@@ -114,45 +116,66 @@ bool CommThread::handleCommand(const char* cmd, char* answer) {
 	/* disable =============================================================  */
 	if (!strncmp(cmd, CMD_DISABLE, BUFFER_SIZE)) {
 		log(INFO, "Disable notification.");
-		config_->notificationEnabled = false;
+		config_->notification_enabled = false;
 		sprintf(answer, ANS_OK);
 	}
 	/* enable ==============================================================  */
 	else if (!strncmp(cmd, CMD_ENABLE, BUFFER_SIZE)) {
 		log(INFO, "Enable notification.");
-		config_->notificationEnabled = true;
+		config_->notification_enabled = true;
 		config_->condition.notify_all();
 		sprintf(answer, ANS_OK);
 	}
 	/* toggle =============================================================  */
 	else if (!strncmp(cmd, CMD_TOGGLE, BUFFER_SIZE)) {
-		bool enabled = config_->notificationEnabled;
+		bool enabled = config_->notification_enabled;
 
 		if(enabled)
 		{
 			log(INFO, "Toggle notification to DISABLED.");
-			config_->notificationEnabled = false;
+			config_->notification_enabled = false;
 			sprintf(answer, ANS_OFF);
 		}
 		else
 		{
 			log(INFO, "Toggle notification to ENABLED.");
-			config_->notificationEnabled = true;
+			config_->notification_enabled = true;
 			sprintf(answer, ANS_ON);
 		}
 	}
 	/* status ==============================================================  */
 	else if(!strncmp(cmd, CMD_STATUS, BUFFER_SIZE)) {
-		if(config_->notificationEnabled)
-			sprintf(answer, ANS_ON);
-		else
+		if (config_->notification_enabled && config_->notifier_state == BUSY) {
+			// busy message (shows time until notification)
+
+			int remain_min = (UserConfig::get().remindAfter() / minute)
+					- config_->busy_min;
+
+			std::stringstream ss;
+			ss << std::setw(3) << std::setfill('0') << remain_min;
+			std::string output = std::string(ANS_ON) + ":" + ss.str();
+
+			sprintf(answer, output.c_str());
+
+
+		} else if (config_->notification_enabled
+				&& config_->notifier_state == PAUSE) {
+			// break message (shows minute)
+
+			std::stringstream ss;
+			ss << std::setw(3) << std::setfill('0') << config_->break_min;
+			std::string output = std::string(ANS_PAUSE) + ":" + ss.str();
+
+			sprintf(answer, output.c_str());
+
+		} else
 			sprintf(answer, ANS_OFF);
 	}
 	/* stop ================================================================  */
 	else if(!strncmp(cmd, CMD_STOP, BUFFER_SIZE)) {
-		log(INFO, "Stop deamon.");
-		config_->killMe = true;
+		config_->kill_me = true;
 		config_->condition.notify_all();
+		sprintf(answer, ANS_OK);
 	}
 	/* percent =============================================================  */
 	else if(!strncmp(cmd, CMD_PERCENT, BUFFER_SIZE)) {

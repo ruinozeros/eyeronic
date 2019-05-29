@@ -1,8 +1,6 @@
 /*
  * Shared.h
  *
- *  Created on: May 27, 2019
- *      Author: ru1
  */
 
 #ifndef INC_SHARED_H_
@@ -13,12 +11,19 @@
 
 typedef struct {
 
-	std::atomic_bool notificationEnabled;
-	std::atomic_bool killMe;
+	std::atomic_bool notification_enabled;
+
+	std::atomic_bool kill_me;
 
 	std::condition_variable condition;
 
-	unsigned int remaining_percentage;
+	std::atomic_int remaining_percentage;
+
+	std::atomic_int notifier_state;
+
+	std::atomic_int busy_min;
+
+	std::atomic_int break_min;
 
 } Shared;
 

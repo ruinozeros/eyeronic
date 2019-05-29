@@ -45,8 +45,16 @@ static const unsigned long threshold_away_s = minute;      // 1 minute idle does
 #define CMD_PERCENT "percent"
 
 #define ANS_ON		"ON"
-#define ANS_OFF		"OFF"
+#define ANS_OFF		"OF"
+#define ANS_PAUSE   "PS"
 #define ANS_OK		"OK"
-#define ANS_ERR		"???"
+#define ANS_ERR		"??"
+
+// notifyThread State
+enum NotifyState
+{
+	BUSY = 1,
+	PAUSE = 2
+};
 
 #endif /* INC_DEFINES_H_ */

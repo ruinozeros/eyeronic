@@ -27,6 +27,8 @@ protected:
 private:
 	unsigned long busy_time_s_;
 
+	unsigned long away_time_s_;
+
 	Shared* config_;
 
 	void sendNotification(const char* title, const char* msg, const char* icon);

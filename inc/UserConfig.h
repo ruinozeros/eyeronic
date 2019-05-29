@@ -1,8 +1,6 @@
 /*
  * Config.h
  *
- *  Created on: May 28, 2019
- *      Author: ru1
  */
 
 #ifndef INC_USERCONFIG_H_

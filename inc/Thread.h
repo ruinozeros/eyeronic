@@ -1,8 +1,6 @@
 /*
  * Thread.h
  *
- *  Created on: May 27, 2019
- *      Author: ru1
  */
 
 #ifndef INC_THREAD_H_

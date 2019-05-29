@@ -1,8 +1,6 @@
 /*
  * StringOp.h
  *
- *  Created on: May 28, 2019
- *      Author: ru1
  */
 
 #ifndef INC_STRINGOP_H_

@@ -157,9 +157,14 @@ void startDeamon() {
 	signal(SIGHUP, signalHandler); /* catch hangup signal */
 	signal(SIGTERM, signalHandler); /* catch kill signal */
 
+	// init shared variables
 	Shared shared_vars;
-	shared_vars.notificationEnabled = true;
-	shared_vars.killMe = false;
+	shared_vars.notification_enabled = true;
+	shared_vars.kill_me = false;
+	shared_vars.break_min = 0;
+	shared_vars.busy_min = 0;
+	shared_vars.notifier_state = BUSY;
+	shared_vars.remaining_percentage = 100;
 
 	CommThread communication_thread(&shared_vars);
 	NotifyThread notification_thread(&shared_vars);
