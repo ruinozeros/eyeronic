@@ -288,39 +288,96 @@ void readConfigFile() {
 
 		std::string stmp = sops::lstrip(line.substr(line.find("=") + 1));
 		unsigned long ltmp;
+
+		// title ===============================================================
 		if (line.find("title") != std::string::npos) {
-			UserConfig::get().title(stmp);
-			printf("Set title to '%s'.\n", stmp.c_str());
-		} else if (line.find("icon") != std::string::npos) {
-			stmp = relToAbs(stmp);
-			if (fileExists(stmp)) {
-				UserConfig::get().icon(stmp);
-				printf("Set icon path to '%s'.\n", stmp.c_str());
-			} else {
-				perror("Icon path not found!");
+			if (stmp.size() + 1 < BUFFER_SIZE) {
+
+				UserConfig::get().title(stmp);
+				printf("Set title to '%s'.\n", stmp.c_str());
+			}
+			else
+			{
+				perror((std::string("Max title length of ")
+								+ std::to_string(BUFFER_SIZE) +
+								" reached").c_str());
 				exit(EXIT_FAILURE);
 			}
+
+		// icon ================================================================
+		} else if (line.find("icon") != std::string::npos) {
+			if (stmp.size() + 1 < BUFFER_SIZE) {
+
+				stmp = relToAbs(stmp);
+				if (fileExists(stmp)) {
+					UserConfig::get().icon(stmp);
+					printf("Set icon path to '%s'.\n", stmp.c_str());
+				} else {
+					perror("Icon path not found!");
+					exit(EXIT_FAILURE);
+				}
+			} else {
+				perror((std::string("Icon path length of ")
+						+ std::to_string(BUFFER_SIZE) + " reached").c_str());
+				exit(EXIT_FAILURE);
+			}
+
+
+		// message =============================================================
 		} else if (line.find("message") != std::string::npos) {
+			if (stmp.size() + 1 < BUFFER_SIZE) {
+
 			UserConfig::get().message(stmp);
 			printf("Set message to '%s'.\n", stmp.c_str());
+			} else {
+				perror((std::string("Message length of ")
+						+ std::to_string(BUFFER_SIZE) + " reached").c_str());
+				exit(EXIT_FAILURE);
+			}
 
+		// break duration ======================================================
 		} else if (line.find("break_duration") != std::string::npos) {
 			std::istringstream iss(stmp);
 			iss >> ltmp;
-			UserConfig::get().breakDuration(ltmp);
-			printf("Set break duration to %ld.\n", ltmp);
 
+			if (ltmp < MAX_TIME_S) {
+				UserConfig::get().breakDuration(ltmp);
+				printf("Set break duration to %ld.\n", ltmp);
+			} else {
+				perror((std::string("Message length of ")
+						+ std::to_string(MAX_TIME_S) + " reached").c_str());
+				exit(EXIT_FAILURE);
+			}
+
+		// remind after ========================================================
 		} else if (line.find("remind_after") != std::string::npos) {
 			std::istringstream iss(stmp);
 			iss >> ltmp;
-			UserConfig::get().remindAfter(ltmp);
-			printf("Set remind_after to %ld.\n", ltmp);
 
+			if (ltmp < MAX_TIME_S) {
+				UserConfig::get().remindAfter(ltmp);
+				printf("Set remind_after to %ld.\n", ltmp);
+
+			} else {
+				perror((std::string("Message length of ")
+						+ std::to_string(MAX_TIME_S) + " reached").c_str());
+				exit(EXIT_FAILURE);
+			}
+
+		// freeze after ========================================================
 		} else if (line.find("freeze_after") != std::string::npos) {
 			std::istringstream iss(stmp);
 			iss >> ltmp;
+
+			if (ltmp < MAX_TIME_S) {
 			UserConfig::get().minBreakDuration(ltmp);
 			printf("Set min break duration to %ld.\n", ltmp);
+
+			} else {
+				perror((std::string("Message length of ")
+						+ std::to_string(MAX_TIME_S) + " reached").c_str());
+				exit(EXIT_FAILURE);
+			}
 		}
 	}
 }

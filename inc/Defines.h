@@ -25,6 +25,8 @@ enum LogLevel {
 #define DEFAULT_REMIND_AFTER_S    (20 * 60)
 #define DEFAULT_MIN_BREAK_DUR_S   (60)
 
+#define MAX_TIME_MIN              (999)
+#define MAX_TIME_S                (MAX_TIME_MIN * minute)
 
 static const unsigned long second = 1;
 static const unsigned long minute = 60 * second;
