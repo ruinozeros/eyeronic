@@ -56,11 +56,11 @@ void NotifyThread::main() {
 		// notification disabled -> wait
 		if (!config_->notification_enabled) {
 
-			config_->condition.wait(lck);
-
-			// enabled
 			busy_time_s_ = 0;
 			config_->busy_min = 0;
+
+			config_->condition.wait(lck);
+			// enabled
 		}
 
 		// wait for threshold or being woken up
