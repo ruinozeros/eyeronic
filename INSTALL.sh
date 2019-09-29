@@ -5,6 +5,7 @@ function checksuccess {
     if [ $? == 0 ]; then
         echo "OK"
     else
+        echo "FAIL"
         exit 1
     fi
 }
