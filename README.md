@@ -35,9 +35,24 @@ config files to `$HOME/.config/eyeronic/`.
 
 ## Configuration
  
- There is a config file in $HOME/.config/eyeronic/ which should be used to configure.
- If you want to use a custom location for your __conf__ file
- 
+There is a config file in $HOME/.config/eyeronic/ which should be used to configure.
+
+#### Polybar
+
+For your polybar config, you could use something like this
+
+~~~ sh
+[module/coffee]
+type = custom/script
+exec = ~/.config/polybar/scripts/eyeronic.sh --cool
+interval = 2
+click-left = ~/.config/polybar/scripts/eyeronic.sh --toggle
+~~~
+
+eyeronic.sh can be found in my dotfiles repository:
+[eyeronic.sh](https://github.com/ruinozeros/dotfiles/blob/master/polybar/scripts/eyeronic.sh)
+
+
 ## Launch the application
  
   ~~~ sh
