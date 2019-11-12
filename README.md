@@ -15,11 +15,18 @@ The main purpose of **Eyeronic** is to help users remind of break-taking and cof
 
 ## Dependencies
 
-- `Xss`
+- `libnotify`
+- `glibmm`
+- `libxss`
 - `X11`
 - `gio-2.0`
 - `gobject-2.0`
 - `glib-2.0`
+
+Additionally, in order to show the notification itself, a notification deamon 
+is needed.
+
+The one I am using is called `dunst`.
 
 ## Building from source
 
@@ -59,7 +66,7 @@ eyeronic.sh can be found in my dotfiles repository:
   $ eyeronic --start
   ~~~
   
- See more commandy by typing
+ See more commands by typing
  
   ~~~ sh
   $ eyeronic --help
@@ -75,6 +82,10 @@ The implementation consists of a deamon and a client which communicates via unix
 - status
 - toggle
 - help
+
+I found a code snippet for sending notifications to the deamon on the archlinux website:
+[archlinux.org/desktop\_notifications](https://wiki.archlinux.org/index.php/Desktop_notifications#C++)
+
 
 #### Created by
 * Ruinozeros [github.com/ruinozeros](http://github.com/ruinozeros/)
