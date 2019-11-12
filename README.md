@@ -26,7 +26,7 @@ The main purpose of **Eyeronic** is to help users remind of break-taking and cof
 Additionally, in order to show the notification itself, a notification deamon 
 is needed.
 
-The one I am using is called `dunst`.
+The one I am using is called `dunst`. See my [dunstrc](https://github.com/ruinozeros/dotfiles/blob/master/dunst/dunstrc) configuration from my dotfiles repo.
 
 ## Building from source
 
